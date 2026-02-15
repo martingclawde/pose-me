@@ -1,0 +1,14 @@
+{
+  "name": "pose-me-workspace",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix app run setup",
+    "setup:ios": "npm --prefix app run setup:ios",
+    "ios": "npm --prefix app run ios",
+    "ios:device": "npm --prefix app run ios:device",
+    "android": "npm --prefix app run android",
+    "start": "npm --prefix app run start",
+    "test": "npm --prefix app run test",
+    "lint": "npm --prefix app run lint"
+  }
+}
