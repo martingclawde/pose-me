@@ -33,8 +33,7 @@ export function computeGridMetrics(input: GridMetricsInput): GridMetrics {
     input.insetLeft -
     input.insetRight -
     input.horizontalPadding * 2;
-  const narrowWidth =
-    (contentWidth - input.columnGap * (1 + CARD_RATIO)) / 3;
+  const narrowWidth = (contentWidth - input.columnGap * 2) / 3;
   const narrowHeight = narrowWidth / CARD_RATIO;
   const wideWidth = contentWidth - input.columnGap - narrowWidth;
   const wideHeight = wideWidth / CARD_RATIO;

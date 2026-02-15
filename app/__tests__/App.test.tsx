@@ -6,6 +6,97 @@ import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 import App from '../App';
 
+jest.mock('react-native-reanimated', () => {
+  const {View} = require('react-native');
+
+  const interpolate = (
+    value: number,
+    inputRange: number[],
+    outputRange: number[],
+  ): number => {
+    if (inputRange.length < 2 || outputRange.length < 2) {
+      return outputRange[0] ?? 0;
+    }
+
+    const inputStart = inputRange[0];
+    const inputEnd = inputRange[inputRange.length - 1];
+    const outputStart = outputRange[0];
+    const outputEnd = outputRange[outputRange.length - 1];
+
+    if (value <= inputStart) {
+      return outputStart;
+    }
+
+    if (value >= inputEnd) {
+      return outputEnd;
+    }
+
+    const progress = (value - inputStart) / (inputEnd - inputStart);
+    return outputStart + (outputEnd - outputStart) * progress;
+  };
+
+  return {
+    __esModule: true,
+    default: {View},
+    Easing: {
+      in: (fn: (x: number) => number) => fn,
+      out: (fn: (x: number) => number) => fn,
+      ease: (x: number) => x,
+    },
+    Extrapolation: {CLAMP: 'clamp'},
+    useSharedValue: <T,>(value: T) => ({value}),
+    withTiming: (toValue: number) => toValue,
+    withSpring: (toValue: number) => toValue,
+    useAnimatedStyle: (updater: () => Record<string, unknown>) => updater(),
+    interpolate,
+  };
+});
+
+jest.mock('react-native-gesture-handler', () => {
+  const React = require('react');
+
+  return {
+    GestureHandlerRootView: ({children}: {children: React.ReactNode}) => <>{children}</>,
+    GestureDetector: ({children}: {children: React.ReactNode}) => <>{children}</>,
+    Gesture: {
+      Simultaneous: () => ({}),
+      Pan: () => ({
+        enabled: () => ({
+          maxPointers: () => ({
+            minDistance: () => ({
+              onBegin: () => ({
+                onUpdate: () => ({
+                  onEnd: () => ({}),
+                }),
+              }),
+            }),
+          }),
+        }),
+      }),
+      Pinch: () => ({
+        enabled: () => ({
+          onBegin: () => ({
+            onUpdate: () => ({
+              onEnd: () => ({}),
+            }),
+          }),
+        }),
+      }),
+      Tap: () => ({
+        enabled: () => ({
+          numberOfTaps: () => ({
+            maxDelay: () => ({
+              maxDistance: () => ({
+                onEnd: () => ({}),
+              }),
+            }),
+          }),
+        }),
+      }),
+    },
+  };
+});
+
 jest.mock('react-native-safe-area-context', () => ({
   ...jest.requireActual('react-native-safe-area-context'),
   SafeAreaProvider: ({children}: {children: React.ReactNode}) => <>{children}</>,
@@ -81,6 +172,21 @@ test('keeps 9:16 ratio on standard and featured cards', async () => {
   expect(featuredHeight).toBeCloseTo((featuredWidth * 16) / 9, 4);
 });
 
+test('renders local placeholder image in cards and fullscreen viewer', async () => {
+  const tree = await renderApp();
+
+  expect(tree.root.findByProps({testID: 'card-image-1'})).toBeTruthy();
+  expect(tree.root.findByProps({testID: 'card-image-2-featured'})).toBeTruthy();
+
+  const firstCard = tree.root.findByProps({testID: 'pose-card-1'});
+
+  await ReactTestRenderer.act(() => {
+    firstCard.props.onPress();
+  });
+
+  expect(tree.root.findByProps({testID: 'fullscreen-photo-image'})).toBeTruthy();
+});
+
 test('renders iOS dock with centered camera button', async () => {
   const tree = await renderApp();
 
@@ -100,6 +206,16 @@ test('opens overlay, toggles favorite and closes', async () => {
   });
 
   expect(tree.root.findByProps({testID: 'fullscreen-overlay'})).toBeTruthy();
+  expect(tree.root.findByProps({testID: 'fullscreen-photo-transition'})).toBeTruthy();
+
+  const overlayStyle = flattenStyle(
+    tree.root.findByProps({testID: 'fullscreen-overlay'}).props.style,
+  );
+
+  expect(overlayStyle.top).toBe(0);
+  expect(overlayStyle.right).toBe(0);
+  expect(overlayStyle.bottom).toBe(0);
+  expect(overlayStyle.left).toBe(0);
 
   const favoriteButton = tree.root.findByProps({testID: 'favorite-toggle'});
 
@@ -113,6 +229,10 @@ test('opens overlay, toggles favorite and closes', async () => {
 
   await ReactTestRenderer.act(() => {
     closeButton.props.onPress();
+  });
+
+  await ReactTestRenderer.act(() => {
+    jest.runOnlyPendingTimers();
   });
 
   expect(() => tree.root.findByProps({testID: 'fullscreen-overlay'})).toThrow();

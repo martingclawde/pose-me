@@ -16,11 +16,11 @@ describe('landing grid metrics', () => {
     });
 
     expect(metrics.contentWidth).toBe(398);
-    expect(metrics.narrowWidth).toBeCloseTo((398 - 12 * (1 + CARD_RATIO)) / 3, 4);
+    expect(metrics.narrowWidth).toBeCloseTo((398 - 12 * 2) / 3, 4);
     expect(metrics.wideWidth).toBeCloseTo(398 - 12 - metrics.narrowWidth, 4);
     expect(metrics.narrowHeight).toBeCloseTo(metrics.narrowWidth / CARD_RATIO, 4);
     expect(metrics.wideHeight).toBeCloseTo(metrics.wideWidth / CARD_RATIO, 4);
-    expect(metrics.wideHeight).toBeCloseTo(metrics.narrowHeight * 2 + 12, 4);
+    expect(metrics.wideHeight).toBeCloseTo((metrics.narrowWidth * 2 + 12) / CARD_RATIO, 4);
   });
 });
 
