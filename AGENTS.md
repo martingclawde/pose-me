@@ -101,7 +101,7 @@ Salida esperada:
 - Alternativa CLI: `xcodebuild` sobre el workspace/scheme del proyecto cuando esten definidos.
 
 ## Convenciones operativas para agentes
-- Antes de modificar codigo, revisar branch actual y evitar `main/master/v1`.
-- No hacer commits ni PR salvo que el usuario lo pida explicitamente.
+- En cada nueva sesion, revisar branch actual: si ya estas en el branch del feature a trabajar, continuar ahi; si no, crear un branch nuevo con nombre del feature (ej. `feat/nombre-feature`).
+- Al trabajar en un branch de feature, se puede commitear al terminar cada cambio.
 - Mantener enfoque TDD para cambios de codigo (primero tests unitarios).
 - Evitar cambios destructivos de git (`reset --hard`, `checkout --`) salvo instruccion explicita.
